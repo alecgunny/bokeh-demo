@@ -1,19 +1,19 @@
 name: publish
 
-# Only run this when the master branch changes
+# Only run this when the main branch changes
 on:
   push:
     branches:
     - main
 
-# Export slides and push to `gh-pages`
+# Export notebook to slideshow and push to `gh-pages`
 jobs:
   deploy-book:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
 
-    # Install dependencies
+    # Set up environment
     - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
@@ -26,12 +26,12 @@ jobs:
         unzip master.zip
         mv reveal.js-master reveal.js
 
-    # Build the book
-    - name: Build the book
+    # Export to slideshow
+    - name: Export slideshow
       run: |
         jupyter nbconvert demo.ipynb --to slides --reveal-prefix=reveal.js --SlidesExporter.reveal_scroll=True
 
-    # Push the book's HTML to github-pages
+    # Push slides and assets to github-pages
     - name: Push to gh-pages
       env:
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
