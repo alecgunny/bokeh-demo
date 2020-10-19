@@ -1,0 +1,44 @@
+name: publish
+
+# Only run this when the master branch changes
+on:
+  push:
+    branches:
+    - main
+
+# Export slides and push to `gh-pages`
+jobs:
+  deploy-book:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    # Install dependencies
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install dependencies
+      run: |
+        pip install jupyter
+        wget https://github.com/hakimel/reveal.js/archive/master.zip
+        unzip master.zip
+        mv reveal.js-master reveal.js
+
+    # Build the book
+    - name: Build the book
+      run: |
+        jupyter nbconvert demo.ipynb --to slides --reveal-prefix=reveal.js --SlidesExporter.reveal_scroll=True
+
+    # Push the book's HTML to github-pages
+    - name: Push to gh-pages
+      env:
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git checkout --orphan gh-pages
+        git rm -rf --cached .
+        mv demo.slides.html index.html
+        git add -f --ignore-errors index.html reveal.js
+        git -c user.name=${GITHUB_ACTOR} -c user.email=${GITHUB_ACTOR} commit -m init
+        git push -f -q https://${GITHUB_ACTOR}:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git
